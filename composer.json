@@ -63,7 +63,7 @@
         "format": "@cs:fix",
         "stan": "phpstan analyse --memory-limit=1G",
         "test": "phpunit --colors=always",
-        "test-coverage": "phpunit --colors=always --coverage-text --coverage-html=coverage",
+        "test-coverage": "phpunit --colors=always --coverage-text --coverage-html=coverage --coverage-clover=coverage/clover.xml",
         "qa": [
             "@composer validate --strict --ansi",
             "@cs:check",

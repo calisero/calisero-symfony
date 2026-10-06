@@ -13,7 +13,8 @@ As of 1.0.0 the suite has **279 tests in 18 classes** (PHPUnit counts the cases 
 # All tests
 composer test
 
-# With a coverage report: text in the terminal, HTML in coverage/ (needs pcov or Xdebug)
+# With a coverage report: text in the terminal, HTML in coverage/, Clover XML in coverage/clover.xml
+# (needs pcov or Xdebug; CI uploads the Clover report to Codecov for the README's badge)
 composer test-coverage
 
 # One suite, one class, or the tests whose names match a pattern

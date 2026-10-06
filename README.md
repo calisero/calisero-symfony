@@ -1,10 +1,15 @@
 # Calisero SMS Bundle for Symfony
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/calisero/symfony-sms.svg?style=flat-square)](https://packagist.org/packages/calisero/symfony-sms)
-[![tests](https://github.com/calisero/symfony-sms/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/calisero/symfony-sms/actions/workflows/ci.yml)
+[![Packagist version](https://img.shields.io/packagist/v/calisero/symfony-sms.svg?style=flat-square)](https://packagist.org/packages/calisero/symfony-sms)
+[![CI](https://img.shields.io/github/actions/workflow/status/calisero/symfony-sms/ci.yml?branch=main&label=tests&style=flat-square)](https://github.com/calisero/symfony-sms/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/codecov/c/github/calisero/symfony-sms?style=flat-square)](https://codecov.io/gh/calisero/symfony-sms)
+[![PHP](https://img.shields.io/packagist/dependency-v/calisero/symfony-sms/php.svg?style=flat-square)](https://www.php.net)
+[![Symfony](https://img.shields.io/packagist/dependency-v/calisero/symfony-sms/symfony/framework-bundle.svg?label=symfony&style=flat-square)](https://symfony.com)
 [![PHPStan](https://img.shields.io/badge/PHPStan-level%209-brightgreen.svg?style=flat-square)](https://phpstan.org)
-[![License](https://img.shields.io/packagist/l/calisero/symfony-sms.svg?style=flat-square)](https://packagist.org/packages/calisero/symfony-sms)
-[![Total Downloads](https://img.shields.io/packagist/dt/calisero/symfony-sms.svg?style=flat-square)](https://packagist.org/packages/calisero/symfony-sms)
+[![Calisero PHP SDK](https://img.shields.io/packagist/dependency-v/calisero/symfony-sms/calisero/calisero-php.svg?label=calisero-php&style=flat-square)](https://github.com/calisero/calisero-php)
+[![Code style: Symfony](https://img.shields.io/badge/code%20style-symfony-000000.svg?style=flat-square)](https://cs.symfony.com)
+[![License](https://img.shields.io/packagist/l/calisero/symfony-sms.svg?style=flat-square)](LICENSE.md)
+[![Downloads](https://img.shields.io/packagist/dm/calisero/symfony-sms.svg?style=flat-square)](https://packagist.org/packages/calisero/symfony-sms)
 
 **Official Symfony bundle for the [Calisero](https://calisero.ro) transactional SMS API.**
 

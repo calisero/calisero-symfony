@@ -145,6 +145,17 @@ jobs:
           path: coverage/
           retention-days: 30
 
+      # The README's coverage badge; needs the repository enabled on codecov.io, never fails the build
+      - name: Upload coverage to Codecov
+        if: matrix.php == '8.4' && matrix.symfony == '7.4.*'
+        uses: codecov/codecov-action@v5
+        continue-on-error: true
+        with:
+          files: coverage/clover.xml
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
   examples:
     name: Examples
     runs-on: ubuntu-latest
