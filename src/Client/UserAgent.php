@@ -10,7 +10,7 @@ use Symfony\Component\HttpKernel\Kernel;
 /**
  * The User-Agent header of every request, as the other Calisero libraries name theirs:
  * the bundle, PHP, Symfony and the platform, e.g.
- * `Calisero-SMS-Symfony/1.0.0 (PHP 8.4.13; Symfony 7.4.0; linux x86_64)`.
+ * `Calisero-SMS-Symfony/1.0.1 (PHP 8.4.13; Symfony 7.4.0; linux x86_64)`.
  *
  * A request whose User-Agent starts with `Calisero-SMS-Symfony/` comes from this bundle;
  * it cannot be configured.

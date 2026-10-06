@@ -1,4 +1,4 @@
-# Contributing to calisero/symfony-sms
+# Contributing to calisero/calisero-symfony
 
 Thank you for considering contributing to the Calisero Symfony bundle! This document explains how to set up your
 environment, the standards we follow, and how to submit high-quality issues and pull requests.
@@ -20,7 +20,7 @@ The development environment runs in Docker (`automation/`): Docker is all you ne
 and the dependencies live in the container.
 
 1. Fork the repository
-2. Clone your fork: `git clone https://github.com/your-username/symfony-sms.git`
+2. Clone your fork: `git clone https://github.com/your-username/calisero-symfony.git`
 3. Start the container and install the dependencies:
    ```bash
    make up        # Builds and starts the PHP container

@@ -1,10 +1,20 @@
 # Changelog
 
-All notable changes to `calisero/symfony-sms` will be documented in this file.
+All notable changes to `calisero/calisero-symfony` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.0.1] - 2026-10-06
+
+The package is now named after its repository. Nothing else changes: the namespace (`Calisero\SymfonySms`), the bundle class, the configuration and the services are the same.
+
+### Changed
+- **The package is named `calisero/calisero-symfony`**, as its repository (`calisero/calisero-symfony`) and the Calisero PHP SDK (`calisero/calisero-php`) are: install it with `composer require calisero/calisero-symfony`. Version 1.0.0 was published as `calisero/symfony-sms`, a name Packagist no longer lists.
+
+### Fixed
+- The README's CI and coverage badges, its links to the issues and the `support` URLs of `composer.json` named a repository that does not exist, `calisero/symfony-sms`.
 
 ## [1.0.0] - 2026-10-06
 

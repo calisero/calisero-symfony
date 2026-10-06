@@ -1,4 +1,4 @@
-# Development environment of calisero/symfony-sms: everything runs in Docker containers
+# Development environment of calisero/calisero-symfony: everything runs in Docker containers
 # (automation/local/docker-compose.yml), nothing is installed on the host.
 
 COMPOSE = docker compose -f automation/local/docker-compose.yml --env-file automation/local/.env

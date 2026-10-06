@@ -1,5 +1,5 @@
 {
-    "name": "calisero/symfony-sms",
+    "name": "calisero/calisero-symfony",
     "description": "Symfony bundle for sending SMS through the Calisero API",
     "type": "symfony-bundle",
     "license": "MIT",
@@ -23,8 +23,8 @@
     "support": {
         "email": "support@calisero.ro",
         "docs": "https://docs.calisero.ro",
-        "issues": "https://github.com/calisero/symfony-sms/issues",
-        "source": "https://github.com/calisero/symfony-sms"
+        "issues": "https://github.com/calisero/calisero-symfony/issues",
+        "source": "https://github.com/calisero/calisero-symfony"
     },
     "require": {
         "php": "^8.2",

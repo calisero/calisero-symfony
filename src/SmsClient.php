@@ -30,7 +30,7 @@ final class SmsClient implements SmsClientInterface
     /**
      * The bundle's version, sent in the User-Agent header; keep it in step with CHANGELOG.md.
      */
-    public const VERSION = '1.0.0';
+    public const VERSION = '1.0.1';
 
     private const SMS_PARAMETERS = [
         'to', 'text', 'from',

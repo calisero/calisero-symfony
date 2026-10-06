@@ -1,15 +1,15 @@
 # Calisero SMS Bundle for Symfony
 
-[![Packagist version](https://img.shields.io/packagist/v/calisero/symfony-sms.svg?style=flat-square)](https://packagist.org/packages/calisero/symfony-sms)
-[![CI](https://img.shields.io/github/actions/workflow/status/calisero/symfony-sms/ci.yml?branch=main&label=tests&style=flat-square)](https://github.com/calisero/symfony-sms/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/codecov/c/github/calisero/symfony-sms?style=flat-square)](https://codecov.io/gh/calisero/symfony-sms)
-[![PHP](https://img.shields.io/packagist/dependency-v/calisero/symfony-sms/php.svg?style=flat-square)](https://www.php.net)
-[![Symfony](https://img.shields.io/packagist/dependency-v/calisero/symfony-sms/symfony/framework-bundle.svg?label=symfony&style=flat-square)](https://symfony.com)
+[![Packagist version](https://img.shields.io/packagist/v/calisero/calisero-symfony.svg?style=flat-square)](https://packagist.org/packages/calisero/calisero-symfony)
+[![CI](https://img.shields.io/github/actions/workflow/status/calisero/calisero-symfony/ci.yml?branch=main&label=tests&style=flat-square)](https://github.com/calisero/calisero-symfony/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/codecov/c/github/calisero/calisero-symfony?style=flat-square)](https://codecov.io/gh/calisero/calisero-symfony)
+[![PHP](https://img.shields.io/packagist/dependency-v/calisero/calisero-symfony/php.svg?style=flat-square)](https://www.php.net)
+[![Symfony](https://img.shields.io/packagist/dependency-v/calisero/calisero-symfony/symfony/framework-bundle.svg?label=symfony&style=flat-square)](https://symfony.com)
 [![PHPStan](https://img.shields.io/badge/PHPStan-level%209-brightgreen.svg?style=flat-square)](https://phpstan.org)
-[![Calisero PHP SDK](https://img.shields.io/packagist/dependency-v/calisero/symfony-sms/calisero/calisero-php.svg?label=calisero-php&style=flat-square)](https://github.com/calisero/calisero-php)
+[![Calisero PHP SDK](https://img.shields.io/packagist/dependency-v/calisero/calisero-symfony/calisero/calisero-php.svg?label=calisero-php&style=flat-square)](https://github.com/calisero/calisero-php)
 [![Code style: Symfony](https://img.shields.io/badge/code%20style-symfony-000000.svg?style=flat-square)](https://cs.symfony.com)
-[![License](https://img.shields.io/packagist/l/calisero/symfony-sms.svg?style=flat-square)](LICENSE.md)
-[![Downloads](https://img.shields.io/packagist/dm/calisero/symfony-sms.svg?style=flat-square)](https://packagist.org/packages/calisero/symfony-sms)
+[![License](https://img.shields.io/packagist/l/calisero/calisero-symfony.svg?style=flat-square)](LICENSE.md)
+[![Downloads](https://img.shields.io/packagist/dm/calisero/calisero-symfony.svg?style=flat-square)](https://packagist.org/packages/calisero/calisero-symfony)
 
 **Official Symfony bundle for the [Calisero](https://calisero.ro) transactional SMS API.**
 
@@ -46,7 +46,7 @@ The Notifier transport needs `symfony/notifier`, the constraints `symfony/valida
 ## Installation
 
 ```bash
-composer require calisero/symfony-sms
+composer require calisero/calisero-symfony
 ```
 
 With Symfony Flex the bundle is registered for you. Otherwise add it to `config/bundles.php`:
@@ -566,7 +566,7 @@ Every request names the bundle and its version, PHP, Symfony and the platform, a
 Calisero can tell the bundle's requests apart and see which versions sent them:
 
 ```
-User-Agent: Calisero-SMS-Symfony/1.0.0 (PHP 8.4.13; Symfony 7.4.0; linux x86_64)
+User-Agent: Calisero-SMS-Symfony/1.0.1 (PHP 8.4.13; Symfony 7.4.0; linux x86_64)
 ```
 
 The header cannot be configured: a request whose `User-Agent` starts with `Calisero-SMS-Symfony/` always comes from
@@ -838,5 +838,5 @@ The MIT License (MIT). Please see the [License File](LICENSE.md) for more inform
 
 - 📖 Documentation: [https://docs.calisero.ro](https://docs.calisero.ro)
 - 🐘 Calisero PHP SDK: [calisero/calisero-php](https://github.com/calisero/calisero-php)
-- 🐛 Issues: [GitHub Issues](https://github.com/calisero/symfony-sms/issues)
+- 🐛 Issues: [GitHub Issues](https://github.com/calisero/calisero-symfony/issues)
 - 📧 Email: support@calisero.ro

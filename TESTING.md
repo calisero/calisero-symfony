@@ -4,7 +4,7 @@ The bundle's tests live in `tests/` and run with PHPUnit. None of them reaches t
 send are answered by a stub transport (`tests/Doubles/StubTransport.php`), which takes the place of the cURL transport
 and records each request as it would have gone over the wire.
 
-As of 1.0.0 the suite has **279 tests in 18 classes** (PHPUnit counts the cases of a data provider apart) and covers
+As of 1.0.1 the suite has **279 tests in 18 classes** (PHPUnit counts the cases of a data provider apart) and covers
 100% of the lines, methods and classes of `src/`.
 
 ## Running the Tests

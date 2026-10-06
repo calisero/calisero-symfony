@@ -1,7 +1,7 @@
 # Calisero Symfony SMS Examples
 
 This directory contains focused, copy-paste friendly examples for common scenarios when integrating the
-`calisero/symfony-sms` bundle into a Symfony application.
+`calisero/calisero-symfony` bundle into a Symfony application.
 
 > These files are illustrative: they belong in a Symfony application (`src/`, `config/`), not in this repository.
 > Each one is a class you can drop in `src/` (rename its namespace if needed), or a configuration file for `config/`.
@@ -10,7 +10,7 @@ This directory contains focused, copy-paste friendly examples for common scenari
 
 1. Install the bundle (and, for the Notifier and the constraints, their components):
    ```bash
-   composer require calisero/symfony-sms
+   composer require calisero/calisero-symfony
    composer require symfony/notifier symfony/validator   # optional
    ```
 2. Copy the configuration of [`config/`](config) into your application's `config/` directory.
@@ -123,4 +123,4 @@ See: `sdk_services.php` and `multi_tenant_client.php`
 
 - [Main README](../README.md)
 - [Calisero API Documentation](https://docs.calisero.ro)
-- [GitHub Issues](https://github.com/calisero/symfony-sms/issues)
+- [GitHub Issues](https://github.com/calisero/calisero-symfony/issues)
