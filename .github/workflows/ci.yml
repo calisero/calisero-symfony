@@ -150,7 +150,7 @@ jobs:
       # The README's coverage badge; needs the repository enabled on codecov.io, never fails the build
       - name: Upload coverage to Codecov
         if: matrix.php == '8.4' && matrix.symfony == '7.4.*'
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         continue-on-error: true
         with:
           files: coverage/clover.xml
