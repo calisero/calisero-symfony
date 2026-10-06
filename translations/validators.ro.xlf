@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+    <file source-language="en" target-language="ro" datatype="plaintext" original="file.ext">
+        <body>
+            <trans-unit id="calisero.phone_e164">
+                <source>This value is not a valid E.164 phone number.</source>
+                <target>Această valoare nu este un număr de telefon valid în format E.164.</target>
+            </trans-unit>
+            <trans-unit id="calisero.sender_id.length">
+                <source>This value should be between {{ min }} and {{ max }} characters long.</source>
+                <target>Această valoare trebuie să aibă între {{ min }} și {{ max }} caractere.</target>
+            </trans-unit>
+            <trans-unit id="calisero.sender_id.characters">
+                <source>This value may only contain letters, digits, spaces, hyphens and dots.</source>
+                <target>Această valoare poate conține doar litere, cifre, spații, liniuțe și puncte.</target>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>

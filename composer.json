@@ -1,0 +1,79 @@
+{
+    "name": "calisero/symfony-sms",
+    "description": "Symfony bundle for sending SMS through the Calisero API",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "keywords": [
+        "symfony",
+        "symfony-bundle",
+        "sms",
+        "calisero",
+        "notifier",
+        "otp",
+        "2fa",
+        "webhook"
+    ],
+    "homepage": "https://calisero.ro",
+    "authors": [
+        {
+            "name": "Calisero",
+            "email": "support@calisero.ro"
+        }
+    ],
+    "support": {
+        "email": "support@calisero.ro",
+        "docs": "https://docs.calisero.ro",
+        "issues": "https://github.com/calisero/symfony-sms/issues",
+        "source": "https://github.com/calisero/symfony-sms"
+    },
+    "require": {
+        "php": "^8.2",
+        "calisero/calisero-php": "^2.3",
+        "symfony/console": "^6.4 || ^7.0 || ^8.0",
+        "symfony/framework-bundle": "^6.4 || ^7.0 || ^8.0"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.75",
+        "phpstan/phpstan": "^2.1",
+        "phpstan/phpstan-symfony": "^2.0",
+        "phpunit/phpunit": "^11.5 || ^12.0 || ^13.0",
+        "symfony/notifier": "^6.4 || ^7.0 || ^8.0",
+        "symfony/translation": "^6.4 || ^7.0 || ^8.0",
+        "symfony/validator": "^6.4 || ^7.0 || ^8.0",
+        "symfony/yaml": "^6.4 || ^7.0 || ^8.0"
+    },
+    "suggest": {
+        "symfony/notifier": "To send SMS through the Notifier component: TexterInterface, notifications and the calisero:// DSN",
+        "symfony/validator": "To validate phone numbers and sender IDs with the PhoneE164 and SenderId constraints"
+    },
+    "autoload": {
+        "psr-4": {
+            "Calisero\\SymfonySms\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Calisero\\SymfonySms\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "cs:check": "php-cs-fixer fix --dry-run --diff --ansi",
+        "cs:fix": "php-cs-fixer fix --ansi",
+        "lint": "@cs:check",
+        "format": "@cs:fix",
+        "stan": "phpstan analyse --memory-limit=1G",
+        "test": "phpunit --colors=always",
+        "test-coverage": "phpunit --colors=always --coverage-text --coverage-html=coverage",
+        "qa": [
+            "@composer validate --strict --ansi",
+            "@cs:check",
+            "@stan",
+            "@test"
+        ]
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

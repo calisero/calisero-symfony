@@ -1,0 +1,33 @@
+includes:
+    # Understands the configuration TreeBuilder and the container
+    - vendor/phpstan/phpstan-symfony/extension.neon
+
+parameters:
+    level: 9
+    paths:
+        - src
+        - config
+        - tests
+    tmpDir: build/phpstan
+    treatPhpDocTypesAsCertain: false
+    ignoreErrors:
+        # The bundle runs on Symfony 6.4, 7.x and 8.x: what is always true or false on the
+        # version installed for the analysis is not on the others
+        -
+            identifier: smaller.alwaysFalse
+            path: tests/App/Kernel.php
+            reportUnmatched: false
+        -
+            identifier: smaller.alwaysTrue
+            path: tests/App/Kernel.php
+            reportUnmatched: false
+        -
+            identifier: function.alreadyNarrowedType
+            path: tests/Unit/Notifier/CaliseroTransportTest.php
+            reportUnmatched: false
+        # SentMessage takes its third argument, the info, since Symfony 7.3: an older one
+        # ignores it, as PHP ignores the extra arguments of a function
+        -
+            identifier: arguments.count
+            path: src/Notifier/CaliseroTransport.php
+            reportUnmatched: false

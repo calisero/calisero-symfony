@@ -1,0 +1,45 @@
+# Dependencies
+/vendor/
+
+# Ignore composer lock: CI resolves the dependencies for each PHP and Symfony version
+composer.lock
+
+# Build artifacts
+/build/
+/.phpunit.cache/
+.phpunit.result.cache
+
+# Coverage reports
+/coverage/
+/coverage.xml
+clover.xml
+
+# PHP CS Fixer cache
+/.php-cs-fixer.cache
+
+# Written by Symfony 8 next to the project directory of a kernel in debug mode
+/config/reference.php
+
+# IDE files
+/.idea/
+/.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local configuration
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+/tmp/
+*.tmp
+*.log
+
+# Automation
+/automation/

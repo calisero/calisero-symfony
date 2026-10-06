@@ -1,0 +1,16 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Calisero\SymfonySms\Tests\App\Kernel;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Input\ArgvInput;
+
+require dirname(__DIR__, 3).'/vendor/autoload.php';
+
+// The demo application on the real Calisero API, configured by automation/local/.env:
+//
+//   make console args="calisero:account"
+//   make console args="calisero:sms:test +40712345678 --text='Hello'"
+exit((new Application(Kernel::demo()))->run(new ArgvInput()));

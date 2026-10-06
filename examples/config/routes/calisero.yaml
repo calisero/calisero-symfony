@@ -1,0 +1,5 @@
+# config/routes/calisero.yaml: the bundle's routes. The webhook route (POST
+# calisero.webhook.path, named calisero_webhook) is loaded while calisero.webhook.enabled is on.
+calisero:
+    resource: .
+    type: calisero

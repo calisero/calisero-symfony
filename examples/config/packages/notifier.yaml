@@ -1,0 +1,11 @@
+# config/packages/notifier.yaml: Calisero as the SMS transport of the Notifier.
+#
+#   CALISERO_DSN=calisero://default?from=MyBrand          # the key of calisero.api_key
+#   CALISERO_DSN=calisero://API_KEY@default?from=MyBrand  # a key of its own
+framework:
+    notifier:
+        texter_transports:
+            calisero: '%env(CALISERO_DSN)%'
+        channel_policy:
+            urgent: [ 'sms' ]
+            high: [ 'sms' ]

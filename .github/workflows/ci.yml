@@ -1,0 +1,200 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  release:
+    types: [ published ]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  code-style:
+    name: Code Style
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer update --no-interaction --no-progress --prefer-dist
+
+      - name: Validate composer.json
+        run: composer validate --strict --ansi
+
+      - name: PHP CS Fixer
+        run: composer cs:check
+
+  static-analysis:
+    name: PHPStan (PHP ${{ matrix.php }}, Symfony ${{ matrix.symfony }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { php: '8.2', symfony: '6.4.*' }
+          - { php: '8.2', symfony: '7.4.*' }
+          - { php: '8.5', symfony: '8.*' }
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # flex makes SYMFONY_REQUIRE pin every symfony/* package
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          tools: composer:v2, flex
+
+      - name: Install dependencies (Symfony ${{ matrix.symfony }})
+        env:
+          SYMFONY_REQUIRE: ${{ matrix.symfony }}
+        run: composer update --no-interaction --no-progress --prefer-dist
+
+      - name: PHPStan (level 9)
+        run: composer stan
+
+  tests:
+    name: Tests (PHP ${{ matrix.php }}, Symfony ${{ matrix.symfony }}${{ matrix.dependencies == 'lowest' && ', lowest' || '' }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php: [ '8.2', '8.3', '8.4', '8.5' ]
+        symfony: [ '6.4.*', '7.4.*', '8.*' ]
+        dependencies: [ 'highest' ]
+        exclude:
+          # Symfony 8 requires PHP 8.4
+          - php: '8.2'
+            symfony: '8.*'
+          - php: '8.3'
+            symfony: '8.*'
+        include:
+          # The lowest versions every constraint of composer.json allows
+          - php: '8.2'
+            symfony: '6.4.*'
+            dependencies: 'lowest'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: curl, json, mbstring
+          coverage: ${{ matrix.php == '8.4' && matrix.symfony == '7.4.*' && 'pcov' || 'none' }}
+          tools: composer:v2, flex
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ matrix.php }}-${{ matrix.symfony }}-${{ matrix.dependencies }}-${{ hashFiles('**/composer.json') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-${{ matrix.php }}-${{ matrix.symfony }}-
+            ${{ runner.os }}-composer-${{ matrix.php }}-
+
+      # The constraints span several majors (Symfony 6.4 to 8, PHPUnit 11 to 13) so that every
+      # supported PHP version resolves to versions that run on it: no lock file is committed
+      - name: Install dependencies (Symfony ${{ matrix.symfony }}, ${{ matrix.dependencies }})
+        env:
+          SYMFONY_REQUIRE: ${{ matrix.symfony }}
+        run: composer update --no-interaction --no-progress --prefer-dist ${{ matrix.dependencies == 'lowest' && '--prefer-lowest' || '' }}
+
+      - name: Show the versions installed
+        run: composer show --direct | grep -E '^(calisero/calisero-php|phpunit/phpunit|symfony/framework-bundle) '
+
+      - name: Run tests
+        if: matrix.php != '8.4' || matrix.symfony != '7.4.*'
+        run: composer test
+
+      - name: Run tests with coverage
+        if: matrix.php == '8.4' && matrix.symfony == '7.4.*'
+        run: composer test-coverage
+
+      - name: Upload coverage report
+        if: matrix.php == '8.4' && matrix.symfony == '7.4.*'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 30
+
+  examples:
+    name: Examples
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+
+      - name: Check the syntax of the examples
+        run: |
+          for file in examples/*.php; do
+            php -l "$file" || exit 1
+          done
+
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer update --no-interaction --no-progress --prefer-dist
+
+      - name: Audit the runtime dependencies
+        run: composer audit --no-dev
+
+      - name: Audit the development dependencies
+        run: composer audit
+        continue-on-error: true
+
+  qa:
+    name: Quality Assurance
+    runs-on: ubuntu-latest
+    needs: [ code-style, static-analysis, tests, examples, security ]
+
+    steps:
+      - name: Success notification
+        run: echo "✅ All quality assurance checks passed on every supported PHP and Symfony version!"

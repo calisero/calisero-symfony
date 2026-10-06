@@ -1,0 +1,18 @@
+version: 2
+
+updates:
+  - package-ecosystem: composer
+    directory: /
+    schedule:
+      interval: weekly
+    # The constraints span several majors on purpose (Symfony 6.4 to 8, PHPUnit 11 to 13):
+    # only widen them, never raise their floor
+    versioning-strategy: widen
+    groups:
+      dev-dependencies:
+        dependency-type: development
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

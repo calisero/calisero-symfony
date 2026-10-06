@@ -1,0 +1,40 @@
+# config/packages/calisero.yaml: every option of the bundle, with its default.
+# Values that differ between environments, or are secret, come from environment variables:
+# declare each one in .env (CALISERO_ACCOUNT_ID=, CALISERO_WEBHOOK_ENABLED=false...) and set
+# the real values in .env.local, the secrets vault or the platform's environment.
+calisero:
+    # Your API key, from the API Keys section of the Calisero dashboard. Required to call the
+    # API; an application without one still boots, and fails only where it calls the API.
+    api_key: '%env(CALISERO_API_KEY)%'
+
+    # The Calisero API base URI.
+    base_uri: 'https://rest.calisero.ro/api/v1'
+
+    # Your account ID, needed by SmsClient::getAccount(), getBalance() and calisero:account.
+    # Empty or null: not configured.
+    account_id: '%env(CALISERO_ACCOUNT_ID)%'
+
+    # Seconds. cURL takes whole seconds, so a fraction is rounded up.
+    timeout: 10
+    connect_timeout: 3
+
+    # The delivery status webhook: import config/routes/calisero.yaml too.
+    webhook:
+        # Loads the webhook route, and sends its absolute URL as the callback_url of every
+        # message that sets none. Outside a request (commands, Messenger workers) the URL is
+        # built on framework.router.default_uri: set it to your application's public URL.
+        enabled: '%env(bool:CALISERO_WEBHOOK_ENABLED)%'
+        path: /calisero/webhook
+        # A shared secret, appended as ?token= to the callback URL and required from every
+        # callback. Empty or null leaves the endpoint open (POST only).
+        token: '%env(CALISERO_WEBHOOK_TOKEN)%'
+
+    # CreditLowEvent and CreditCriticalEvent, dispatched by the webhook. Null disables a threshold.
+    credit:
+        low_threshold: 500
+        critical_threshold: 100
+
+    # DailyLimitLowEvent, dispatched by the webhook while this many messages or fewer are
+    # left today. Null disables it.
+    daily_limit:
+        low_threshold: 100
