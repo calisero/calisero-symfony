@@ -35,7 +35,7 @@
 
     <php>
         <ini name="error_reporting" value="-1"/>
-        <ini name="zend.assertions" value="1"/>
+        <!-- zend.assertions cannot be set here: php.ini decides it (CI sets it with setup-php) -->
         <env name="SHELL_VERBOSITY" value="-1"/>
         <!-- Wide enough for the console output to keep its messages on one line -->
         <env name="COLUMNS" value="300"/>

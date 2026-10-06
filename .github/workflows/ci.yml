@@ -98,11 +98,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # zend.assertions can only be turned on in php.ini, and the runners' turns it off
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
           extensions: curl, json, mbstring
+          ini-values: zend.assertions=1
           coverage: ${{ matrix.php == '8.4' && matrix.symfony == '7.4.*' && 'pcov' || 'none' }}
           tools: composer:v2, flex
 
