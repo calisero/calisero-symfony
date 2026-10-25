@@ -4,7 +4,10 @@ All notable changes to `calisero/calisero-symfony` will be documented in this fi
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.2] - 2026-10-25
+
+### Documentation
+- `AGENTS.md`: guidance for AI coding agents, both for integrating Calisero into a Symfony application with this bundle (configuration, sending, OTP, statuses, the delivery webhook and its events, errors and trace IDs, sandbox keys, the pitfalls of the API) and for working on the bundle. It ships in the Composer archive.
 
 ## [1.0.1] - 2026-10-06
 

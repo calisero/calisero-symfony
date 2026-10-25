@@ -30,7 +30,7 @@ final class OpenApiContractTest extends IntegrationTestCase
 
     public function testTheDocumentIsTheOneOfTheSupportedApiVersion(): void
     {
-        $this->assertStringStartsWith('1.0.14', self::string(self::path(self::document(), 'info', 'version')));
+        $this->assertStringStartsWith('1.0.15', self::string(self::path(self::document(), 'info', 'version')));
     }
 
     public function testEveryFieldOfAMessageCanBeSent(): void
@@ -89,7 +89,7 @@ final class OpenApiContractTest extends IntegrationTestCase
         $this->bootKernel(['api_key' => 'test-api-key', 'webhook' => ['enabled' => true]]);
         $events = $this->recordEvents(MessageDeliveredEvent::class);
 
-        $example = self::array(self::path(self::document(), 'paths', 'https://yoursite.com/your-callback-url', 'post', 'requestBody', 'content', 'application/json', 'example'));
+        $example = self::array(self::path(self::document(), 'paths', '/messages', 'post', 'callbacks', 'deliveryStatus', '{$request.body#/callback_url}', 'post', 'requestBody', 'content', 'application/json', 'example'));
         $response = $this->postWebhook($example);
 
         $this->assertSame(200, $response->getStatusCode());
