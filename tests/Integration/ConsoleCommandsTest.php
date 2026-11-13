@@ -295,6 +295,21 @@ final class ConsoleCommandsTest extends IntegrationTestCase
         $this->assertStringContainsString('Trace ID: '.ApiFixtures::TRACE_ID, $tester->getDisplay());
     }
 
+    /**
+     * A code validates only once (API 1.0.17): checked again, it is refused.
+     */
+    public function testVerificationCheckReportsACodeAlreadyUsed(): void
+    {
+        $this->transport()->respond(422, ApiFixtures::validationError('code', 'The validation code has already been used.'));
+
+        $tester = $this->command('calisero:verification:check');
+        $tester->execute(['to' => TestPhones::DEFAULT, 'code' => 'SBMH0f']);
+
+        $this->assertSame(Command::FAILURE, $tester->getStatusCode());
+        $this->assertStringContainsString('API validation error: The validation code has already been used.', $tester->getDisplay());
+        $this->assertMatchesRegularExpression('/code\s+The validation code has already been used\./', $tester->getDisplay());
+    }
+
     public function testVerificationCheckReportsAServerError(): void
     {
         $this->transport()->respond(500, ['message' => 'Internal server error!']);

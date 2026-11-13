@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Calisero\SymfonySms\Tests\Contract;
 
 use Calisero\Sms\Exceptions\DailyLimitExceededException;
+use Calisero\Sms\Exceptions\ValidationException;
 use Calisero\SymfonySms\Event\DeliveryStatusEvent;
 use Calisero\SymfonySms\Event\MessageDeliveredEvent;
 use Calisero\SymfonySms\Event\MessageFailedEvent;
 use Calisero\SymfonySms\Event\MessageSentEvent;
 use Calisero\SymfonySms\Notifier\CaliseroOptions;
+use Calisero\SymfonySms\Notifier\CaliseroTransportException;
 use Calisero\SymfonySms\SmsClientInterface;
 use Calisero\SymfonySms\Tests\IntegrationTestCase;
 use Calisero\SymfonySms\Tests\Support\ApiFixtures;
@@ -30,7 +32,7 @@ final class OpenApiContractTest extends IntegrationTestCase
 
     public function testTheDocumentIsTheOneOfTheSupportedApiVersion(): void
     {
-        $this->assertStringStartsWith('1.0.15', self::string(self::path(self::document(), 'info', 'version')));
+        $this->assertStringStartsWith('1.0.17', self::string(self::path(self::document(), 'info', 'version')));
     }
 
     public function testEveryFieldOfAMessageCanBeSent(): void
@@ -127,6 +129,73 @@ final class OpenApiContractTest extends IntegrationTestCase
         }
     }
 
+    public function testTheDocumentedDailyLimitRefusalOfAVerificationIsReported(): void
+    {
+        $example = self::array(self::path(self::document(), 'paths', '/verifications', 'post', 'responses', '429', 'content', 'application/json', 'example'));
+        $this->transport()->respond(429, $example);
+
+        try {
+            $this->client()->sendVerification(['to' => TestPhones::DEFAULT, 'brand' => 'MyApp']);
+            $this->fail('The documented refusal was not reported.');
+        } catch (DailyLimitExceededException $e) {
+            $this->assertSame($example['message'], $e->getMessage());
+        }
+    }
+
+    /**
+     * A sender that is not approved for the account (unknown, pending, rejected or another
+     * account's) is refused: nothing is sent.
+     */
+    public function testTheDocumentedRefusalOfASenderIsReported(): void
+    {
+        $example = self::senderRefusal();
+        $this->transport()->respond(422, $example);
+
+        try {
+            $this->client()->sendSms(['to' => TestPhones::DEFAULT, 'text' => 'Hello', 'from' => 'NotApproved']);
+            $this->fail('The documented refusal was not reported.');
+        } catch (ValidationException $e) {
+            $this->assertSame($example['message'], $e->getMessage());
+            $this->assertSame(self::path($example, 'errors', 'sender'), $e->getValidationErrors()['sender'] ?? null);
+        }
+    }
+
+    public function testTheDocumentedRefusalOfASenderReachesTheNotifier(): void
+    {
+        $this->transport()->respond(422, self::senderRefusal());
+
+        try {
+            $this->service('test.texter', TexterInterface::class)->send(new SmsMessage(TestPhones::DEFAULT, 'Hello', 'NotApproved'));
+            $this->fail('The documented refusal was not reported.');
+        } catch (CaliseroTransportException $e) {
+            $this->assertInstanceOf(ValidationException::class, $e->getApiException());
+            $this->assertArrayHasKey('sender', $e->getApiException()->getValidationErrors());
+        }
+    }
+
+    /**
+     * A wrong code, an expired one, a code already used (a code validates only once) and
+     * too many attempts: each a 422 on the code field.
+     */
+    public function testEveryDocumentedRefusalOfAVerificationCodeIsReported(): void
+    {
+        $examples = self::array(self::path(self::document(), 'paths', '/verifications/validate', 'put', 'responses', '422', 'content', 'application/json', 'examples'));
+        $this->assertArrayHasKey('code_already_used', $examples);
+
+        foreach ($examples as $name => $example) {
+            $body = self::array(self::path(self::array($example), 'value'));
+            $this->transport()->respond(422, $body);
+
+            try {
+                $this->client()->checkVerification(['to' => TestPhones::DEFAULT, 'code' => 'SBMH0f']);
+                $this->fail(\sprintf('The documented refusal "%s" was not reported.', $name));
+            } catch (ValidationException $e) {
+                $this->assertSame($body['message'], $e->getMessage(), (string) $name);
+                $this->assertSame(self::path($body, 'errors', 'code'), $e->getValidationErrors()['code'] ?? null, (string) $name);
+            }
+        }
+    }
+
     private function client(): SmsClientInterface
     {
         return $this->service('calisero.sms_client', SmsClientInterface::class);
@@ -143,6 +212,14 @@ final class OpenApiContractTest extends IntegrationTestCase
         sort($actual);
 
         $this->assertSame($expected, $actual);
+    }
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    private static function senderRefusal(): array
+    {
+        return self::array(self::path(self::document(), 'components', 'responses', '422CreateMessageValidationError', 'content', 'application/json', 'example'));
     }
 
     /**

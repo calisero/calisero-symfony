@@ -35,7 +35,7 @@ final class OrderNotifier
             $response = $this->sms->sendSms([
                 'to' => $phone,                         // E.164, e.g. +40712345678
                 'text' => "Order {$orderNumber} has shipped.",
-                // 'from' => 'MyBrand',                 // only once Calisero approved it
+                // 'from' => 'MyBrand',                 // a sender approved for the account, as approved
             ]);
         } catch (ValidationException $e) {
             // 422: the fields at fault, e.g. ['recipient' => ['The recipient format is invalid.']]

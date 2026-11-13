@@ -4,6 +4,30 @@ All notable changes to `calisero/calisero-symfony` will be documented in this fi
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [1.0.3] - 2026-11-13
+
+Support for versions 1.0.15, 1.0.16 and 1.0.17 of the Calisero API, through `calisero/calisero-php` 2.3.2. The API added validation rules and a TLS requirement but no field or endpoint, so the bundle's public API is unchanged and upgrading needs no code change. Two changes reach an application, though: the requests never offer less than TLS 1.2, and a verification code validates only once.
+
+### Changed
+- **TLS 1.2 at least.** Requires `calisero/calisero-php` `^2.3.2` (was `^2.3`), whose cURL client never offers less than TLS 1.2: since 1 November 2026 the API refuses TLS 1.0 and 1.1 during the handshake, with no HTTP answer, and nothing is sent. PHP's cURL must be built with an SSL library that supports TLS 1.2, as any OpenSSL from 1.0.1 on does.
+- **A verification code validates only once** (API 1.0.17). `checkVerification()` and `calisero:verification:check` used to succeed again for a code already verified; the API now refuses it with a 422, a `ValidationException` ("The validation code has already been used." on the `code` field). An application that checks the same code twice (a resubmitted form, a retried job) must record the first success itself, and send a new code to verify the number again.
+- **`base_uri` must be `https://`.** The configuration refuses an `http://` base URI: the API redirects it, and the SDK follows no redirect, so every request failed with the `3xx`.
+- `resources/openApi/api-v1.json`: the API's 1.0.17 OpenAPI document.
+
+### Documentation
+- The validation rules of the API, in `README.md`, `AGENTS.md`, the examples and the docblocks of `SmsClientInterface` and `CaliseroOptions`:
+  - `from` (and the Notifier DSN's `?from=`) must be a sender approved for the account, written exactly as approved (case-sensitive); one that is unknown, still pending, rejected or another account's is refused with a `ValidationException` ("The sender is invalid or is not approved.") and nothing is sent. The "Sender ID Requirements" section no longer says the gateway may substitute a default sender.
+  - `callback_url`, the webhook's included, must be an http or https address on the public Internet: private, loopback and link-local addresses are refused, and redirects are not followed. The webhook section explains what to do on a development machine.
+  - The `brand` and the `template` of a verification may not contain links.
+  - A verification code validates only once.
+  - Test messages (a sandbox account or API key) keep their links as written and come back with no shortened URL.
+- `README.md`: a new "TLS" section; the requirements table lists 1.0.3 with `calisero/calisero-php` `^2.3.2` and API 1.0.17.
+
+### Tests
+- The contract tests follow the 1.0.17 document: the documented refusal of a sender that is not approved, through the client and the Notifier; each documented refusal of a verification code, the code already used included; the daily limit refusal of a verification. The console reports a code already used, and the configuration refuses an `http://` base URI.
+
 ## [1.0.2] - 2026-10-25
 
 ### Documentation

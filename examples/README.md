@@ -70,7 +70,8 @@ See: `verification_controller.php`
 - Codes are **generated** by Calisero: 6 characters, case-insensitive
 - `brand` (Calisero's default text) or `template` (your text, containing `{code}`)
 - `expires_in`: 1 to 10 minutes, 5 by default
-- A wrong, expired or exhausted code is a `ValidationException` (422); status `'verified'` when right
+- A wrong, expired, already used or exhausted code is a `ValidationException` (422); status `'verified'` when right
+- A code validates only once: record the first success, send a new code to verify again
 
 **Parameters:**
 

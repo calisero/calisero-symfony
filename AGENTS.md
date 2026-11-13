@@ -82,9 +82,13 @@ try {
     $verification = $this->sms->checkVerification(['to' => $phone, 'code' => $input])->getData();
     // $verification->getStatus() === 'verified'
 } catch (ValidationException $e) {
-    // wrong or expired code, or too many attempts (422): $e->getMessage() says which
+    // wrong, expired or already used code, or too many attempts (422): $e->getMessage() says which
 }
 ```
+
+A code validates only once: checked again (a resubmitted form, a retried job, a double-tapped button) it is refused
+with a 422, "The validation code has already been used.". Record the first success in your application; to verify the
+number again, send a new code.
 
 See `examples/verification_controller.php` for a whole flow.
 
@@ -191,7 +195,13 @@ the trace ID with every failure and every send. Every answer carries it as `X-Tr
   `TransportException`: the SMS may have been sent and billed. Check `listMessages()` first. Route the Notifier's
   `SmsMessage` through a Messenger transport with `retry_strategy: { max_retries: 0 }`.
 - **OTP**: `brand` or a `template` holding `{code}`, neither with links. Each code is a billed SMS that counts towards
-  the daily limit: rate-limit resends in your application (the RateLimiter component works well).
+  the daily limit: rate-limit resends in your application (the RateLimiter component works well). A code validates
+  only once.
+- **Sandbox and shortened links**: test messages (a sandbox account or API key) keep their links as written and come
+  back with an empty `getShortenedUrls()`: never assert on shortened links against the sandbox.
+- **TLS and HTTPS**: the API takes TLS 1.2 or 1.3 only; the SDK's cURL client never offers less (PHP's cURL needs an
+  SSL library with TLS 1.2, e.g. OpenSSL 1.0.1+). Keep `base_uri` on `https://`: `http://` is redirected, the SDK
+  follows no redirect, and the bundle refuses an `http://` base URI in its configuration.
 
 ## Working on this library
 
