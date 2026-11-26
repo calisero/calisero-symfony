@@ -6,8 +6,9 @@ declare(strict_types=1);
  * Example: two-factor authentication with the Verifications API
  *
  * Calisero generates the code (6 characters, case-insensitive), sends it and checks it.
- * Either `brand` or `template` (containing {code}) is required; `expires_in` is 1 to 10
- * minutes, 5 by default. A code's SMS counts towards the daily sending limit.
+ * Either `brand` or `template` (containing {code}, no links) is required; `expires_in` is 1
+ * to 10 minutes, 5 by default. A code's SMS counts towards the daily sending limit. A code
+ * validates only once: checked again, it is refused with a 422.
  */
 
 namespace App\Controller;
@@ -65,7 +66,8 @@ final class TwoFactorController
                 'code' => (string) $request->getPayload()->get('code'),
             ])->getData();
         } catch (ValidationException $e) {
-            // 422: a wrong code, an expired one, or too many attempts
+            // 422: a wrong code, an expired one, one already used (a resubmitted form lands
+            // here: the first success removed 2fa_phone below), or too many attempts
             return new JsonResponse(['error' => $e->getMessage()], 422);
         } catch (NotFoundException) {
             return new JsonResponse(['error' => 'Request a new code'], 404);

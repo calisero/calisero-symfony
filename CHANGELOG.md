@@ -4,6 +4,33 @@ All notable changes to `calisero/calisero-symfony` will be documented in this fi
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [1.0.3] - 2026-11-26
+
+Support for versions 1.0.15, 1.0.16 and 1.0.17 of the Calisero API and for its approved link domains, through `calisero/calisero-php` 2.3.3. The API added validation rules and a TLS requirement but no field or endpoint, so the bundle's public API is unchanged and upgrading needs no code change. Three changes reach an application, though: the requests never offer less than TLS 1.2, a verification code validates only once, and an account restricted to its approved link domains may link only to them.
+
+### Changed
+- **TLS 1.2 at least.** Requires `calisero/calisero-php` `^2.3.3` (was `^2.3`), whose cURL client never offers less than TLS 1.2: since 1 November 2026 the API refuses TLS 1.0 and 1.1 during the handshake, with no HTTP answer, and nothing is sent. PHP's cURL must be built with an SSL library that supports TLS 1.2, as any OpenSSL from 1.0.1 on does; a cURL that cannot use it throws a `TransportException` before anything is sent.
+- **Approved link domains.** On an account restricted to its approved link domains (Messages › Link domains in the dashboard), every link in the text of a message, with or without `https://`, must go to one of them. The API refuses any other with a 422, a `ValidationException` whose `getValidationErrors()['body']` names the domain; nothing is sent or billed, with a sandbox API key too. Through the Notifier it arrives as a `CaliseroTransportException`, and `calisero:sms:test` lists it with the other fields at fault. A scheduled message whose domain is rejected or revoked before it is due fails with the error code 1005. An account without the restriction is not affected.
+- **A verification code validates only once** (API 1.0.17). `checkVerification()` and `calisero:verification:check` used to succeed again for a code already verified; the API now refuses it with a 422, a `ValidationException` ("The validation code has already been used." on the `code` field). An application that checks the same code twice (a resubmitted form, a retried job) must record the first success itself, and send a new code to verify the number again.
+- **`base_uri` must be `https://`.** The configuration refuses an `http://` base URI: the API redirects it, and the SDK follows no redirect, so every request failed with the `3xx`.
+- `resources/openApi/api-v1.json`: the API's 1.0.17 OpenAPI document, as shipped with `calisero/calisero-php` 2.3.3: it documents the refusal of a sender and of a link domain that are not approved, the code already used, and the daily limit of a new account (50 messages a day).
+
+### Documentation
+- The validation rules of the API, in `README.md`, `AGENTS.md`, the examples and the docblocks of `SmsClientInterface` and `CaliseroOptions`:
+  - On an account restricted to its approved link domains, a link to any other domain is refused on `body` (new "Approved Link Domains" section of `README.md`).
+  - `from` (and the Notifier DSN's `?from=`) must be a sender approved for the account, written exactly as approved (case-sensitive); one that is unknown, still pending, rejected or another account's is refused with a `ValidationException` ("The sender is invalid or is not approved.") and nothing is sent. The "Sender ID Requirements" section no longer says the gateway may substitute a default sender.
+  - `callback_url`, the webhook's included, must be an http or https address on the public Internet: private, loopback and link-local addresses are refused, and redirects are not followed. The webhook section explains what to do on a development machine.
+  - The `brand` and the `template` of a verification may not contain links.
+  - A verification code validates only once.
+  - Test messages (a sandbox account or API key) keep their links as written and come back with no shortened URL.
+  - A new account starts with a daily sending limit of 50 messages.
+- `README.md`: a new "TLS" section; the requirements table lists 1.0.3 with `calisero/calisero-php` `^2.3.3` and API 1.0.17.
+
+### Tests
+- The contract tests follow the 1.0.17 document: each documented refusal of a message on its field (a sender, and a link domain, that are not approved), the sender's and the link domain's through the Notifier too; each documented refusal of a verification code, the code already used included; the daily limit refusal of a verification. The console lists a link domain that is not approved and reports a code already used, and the configuration refuses an `http://` base URI. 287 tests, up from 279.
+
 ## [1.0.2] - 2026-10-25
 
 ### Documentation

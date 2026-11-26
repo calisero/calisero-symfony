@@ -4,7 +4,7 @@ The bundle's tests live in `tests/` and run with PHPUnit. None of them reaches t
 send are answered by a stub transport (`tests/Doubles/StubTransport.php`), which takes the place of the cURL transport
 and records each request as it would have gone over the wire.
 
-As of 1.0.1 the suite has **279 tests in 18 classes** (PHPUnit counts the cases of a data provider apart) and covers
+As of 1.0.3 the suite has **287 tests in 18 classes** (PHPUnit counts the cases of a data provider apart) and covers
 100% of the lines, methods and classes of `src/`.
 
 ## Running the Tests
@@ -72,8 +72,8 @@ validator and the translator), booted by `tests/IntegrationTestCase.php` on the 
 | Test class | Tests | Covers |
 |---|---|---|
 | `WebhookTest` | 38 | Over HTTP: the event of each status, none for an unknown or missing status, the typed payload; the `400` of a body that is not a JSON object, the `405` of a GET, no route while disabled, another path; the token, right and wrong in every way (missing, empty, prefix, extension, case, array); the credit thresholds (low, critical, on them, above, strings, disabled) and the daily limit threshold |
-| `ConsoleCommandsTest` | 22 | Each command's output and exit code: a sent SMS with the daily limit left and the trace ID, every option of `calisero:sms:test`, the daily limit against the rate limit, field errors, a wrong option, no answer, a wrong key, 403, 404, other errors, 500; the status with its clicks; the account with and without a daily limit, without an account ID; sending and checking a code |
-| `BundleTest` | 15 | The default configuration, the invalid ones (a User-Agent setting included), null thresholds; the services autowired; the client and the timeouts built on the configuration; the configuration from environment variables, read only at runtime; the console commands and the Romanian translations registered |
+| `ConsoleCommandsTest` | 24 | Each command's output and exit code: a sent SMS with the daily limit left and the trace ID, every option of `calisero:sms:test`, the daily limit against the rate limit, field errors (a link domain that is not approved included), a wrong option, no answer, a wrong key, 403, 404, other errors, 500; the status with its clicks; the account with and without a daily limit, without an account ID; sending and checking a code, a code already used |
+| `BundleTest` | 16 | The default configuration, the invalid ones (an `http://` base URI and a User-Agent setting included), null thresholds; the services autowired; the client and the timeouts built on the configuration; the configuration from environment variables, read only at runtime; the console commands and the Romanian translations registered |
 | `NotifierTest` | 6 | `TexterInterface` and the `sms` channel of a notification through the `calisero` transport: the request, the options, the DSN's key and sender, the webhook's callback URL, a refusal |
 | `DocumentedConfigurationTest` | 4 | An application booted on the configuration files of `examples/config`: the client, the account, the Notifier and the webhook as documented |
 | `ValidationTranslationTest` | 2 | The constraints through the application's validator, in English and in Romanian |
@@ -82,7 +82,7 @@ validator and the translator), booted by `tests/IntegrationTestCase.php` on the 
 
 | Test class | Tests | Covers |
 |---|---|---|
-| `OpenApiContractTest` | 8 | The bundle against the API's OpenAPI document (`resources/openApi/api-v1.json`): its version; every field of a message (through the client and the Notifier), of a verification and of a verification check can be sent; the documented webhook payload is dispatched with its typed fields; every documented status has its event; the documented daily limit refusal is reported |
+| `OpenApiContractTest` | 13 | The bundle against the API's OpenAPI document (`resources/openApi/api-v1.json`): its version; every field of a message (through the client and the Notifier), of a verification and of a verification check can be sent; the documented webhook payload is dispatched with its typed fields; every documented status has its event; the documented refusals are reported as their exceptions: the daily limit of a message and of a verification, each refusal of a message on its field (a sender and a link domain that are not approved, both through the Notifier too), and each refused verification code, the code already used included |
 
 When the API changes, replace `resources/openApi/api-v1.json` with the new document: the contract tests then show what
 the bundle lacks.

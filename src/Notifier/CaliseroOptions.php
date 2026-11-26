@@ -13,7 +13,8 @@ use Symfony\Component\Notifier\Message\MessageOptionsInterface;
  *     $sms = new SmsMessage('+40712345678', 'Your order shipped: https://shop.example.com/o/123');
  *     $sms->options((new CaliseroOptions())->shortenUrls()->validity(24));
  *
- * The sender is the SmsMessage's `from`, or the `from` option of the DSN.
+ * The sender is the SmsMessage's `from`, or the `from` option of the DSN: a sender approved
+ * for the account, written exactly as approved, or the API refuses the message.
  */
 final class CaliseroOptions implements MessageOptionsInterface
 {
@@ -77,7 +78,9 @@ final class CaliseroOptions implements MessageOptionsInterface
     }
 
     /**
-     * The URL Calisero posts the delivery status to, instead of the bundle's webhook.
+     * The URL Calisero posts the delivery status to, instead of the bundle's webhook: an
+     * http(s) address on the public Internet (private, loopback and link-local addresses are
+     * refused), whose redirects are not followed.
      *
      * @return $this
      */
@@ -90,7 +93,8 @@ final class CaliseroOptions implements MessageOptionsInterface
 
     /**
      * Have Calisero shorten the http:// and https:// links of the text; the short links
-     * and their click counts come back in the message's shortened URLs.
+     * and their click counts come back in the message's shortened URLs. Test messages (a
+     * sandbox account or API key) keep their links as written, with no shortened URL.
      *
      * @return $this
      */

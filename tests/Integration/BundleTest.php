@@ -70,6 +70,8 @@ final class BundleTest extends IntegrationTestCase
     {
         yield 'a negative timeout' => [['timeout' => -1], 'calisero.timeout'];
         yield 'an empty base URI' => [['base_uri' => ''], 'The path "calisero.base_uri" cannot contain an empty value'];
+        // The API redirects http://, which turns a POST into a GET, and the SDK follows no redirect
+        yield 'a base URI on http://' => [['base_uri' => 'http://rest.calisero.ro/api/v1'], 'Invalid configuration for path "calisero.base_uri": The Calisero API takes HTTPS only (TLS 1.2 or 1.3): use an https:// base URI.'];
         yield 'a webhook flag that is not a boolean' => [['webhook' => ['enabled' => 'yes']], 'Invalid type for path "calisero.webhook.enabled". Expected "bool"'];
         yield 'a negative daily limit threshold' => [['daily_limit' => ['low_threshold' => -5]], 'calisero.daily_limit.low_threshold'];
         yield 'an unknown option' => [['sender' => 'CALISERO'], 'Unrecognized option "sender" under "calisero"'];

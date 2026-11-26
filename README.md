@@ -36,10 +36,12 @@ commands and validation constraints. Supports **Symfony 6.4, 7.x and 8.x** on **
 
 | Bundle | Symfony | PHP | Calisero PHP SDK | Calisero API |
 | --- | --- | --- | --- | --- |
-| `^1.0` | 6.4, 7.x, 8.x | 8.2 – 8.5 (Symfony 8 requires PHP 8.4+) | `^2.3` | 1.0.14 |
+| `^1.0.3` | 6.4, 7.x, 8.x | 8.2 – 8.5 (Symfony 8 requires PHP 8.4+) | `^2.3.3` | 1.0.17 |
+| `1.0.0` – `1.0.2` | 6.4, 7.x, 8.x | 8.2 – 8.5 (Symfony 8 requires PHP 8.4+) | `^2.3` | 1.0.14 – 1.0.15 |
 
 Composer picks the Symfony release your PHP version allows: on PHP 8.2 and 8.3 you get Symfony 6.4 or 7.x, on PHP 8.4
-and 8.5 any of the three. The SDK needs `ext-curl` and `ext-json`.
+and 8.5 any of the three. The SDK needs `ext-curl`, built with an SSL library that supports TLS 1.2 (any OpenSSL from
+1.0.1 on), and `ext-json`: see [TLS](#tls).
 
 The Notifier transport needs `symfony/notifier`, the constraints `symfony/validator`; both are optional.
 
@@ -161,6 +163,17 @@ foreach ($this->sms->getMessageStatus($messageId)->getData()->getShortenedUrls()
 }
 ```
 
+- **Shortened links in the sandbox**: test messages (a sandbox account or a sandbox API key) keep their links as
+  written and come back with no shortened URL: do not assert on shortened links against the sandbox.
+- **Links in `text`**: on an account restricted to its approved link domains, every link must go to one of them; any
+  other is refused with a `ValidationException` (422) on `body`. See [Approved Link Domains](#approved-link-domains).
+- **`from`**: a sender approved for your account, written exactly as approved (the match is case-sensitive). One that
+  is unknown, still pending, rejected or another account's is refused with a `ValidationException` (422, "The sender
+  is invalid or is not approved." on `sender`): nothing is sent or billed. Leave `from` out for the default sender. See
+  [Sender ID Requirements](#sender-id-alphanumeric-requirements).
+- **`callback_url`**: an `http` or `https` address on the public Internet. Private, loopback and link-local addresses
+  (`localhost`, `192.168.…`) are refused with a 422, and redirects are not followed. The same goes for the URL of the
+  bundle's [webhook](#webhook-handling).
 - **Unknown parameters are refused**: a typo such as `sheduleAt` throws an `\InvalidArgumentException` naming the
   accepted parameters, instead of sending the message without it. So does a value of the wrong type (`'validity' =>
   'two days'`). Strings of digits and booleans as forms give them (`'48'`, `'false'`, `'on'`) are read as such.
@@ -205,9 +218,17 @@ if ('verified' === $verification->getStatus()) {
 }
 ```
 
-A wrong, expired or exhausted code is refused with a `ValidationException` (422), whose message says which. Either
-`brand` or `template` is required. A code's SMS counts towards the [daily sending limit](#daily-sending-limit). See
-[`examples/verification_controller.php`](examples/verification_controller.php) for a whole flow.
+A wrong, expired, already used or exhausted code is refused with a `ValidationException` (422), whose message says
+which (`getValidationErrors()['code']`).
+
+- **A code validates only once.** Checked again, after a resubmitted form, a retried job or a double-tapped button, it
+  is refused with "The validation code has already been used.". Record the first success yourself, and send a new code
+  to verify the same number again.
+- Either `brand` or `template` is required, and neither may contain links (web addresses, domains, emails or IP
+  addresses): codes go out from a shared sender.
+- A code's SMS counts towards the [daily sending limit](#daily-sending-limit).
+
+See [`examples/verification_controller.php`](examples/verification_controller.php) for a whole flow.
 
 ### Messages and the Account
 
@@ -425,6 +446,10 @@ While the webhook is enabled, every message that sets no `callback_url`, sent by
 Notifier, carries the webhook's absolute URL, e.g. `https://shop.example.com/calisero/webhook?token=…`. If the route
 is not loaded, the message is refused with a `\LogicException`, rather than sent with a callback URL nothing answers.
 
+That URL must be on the public Internet: the API refuses (422, nothing sent) a `callback_url` on `localhost`, a
+private or a link-local address, and follows no redirect. On a development machine, leave the webhook disabled, or
+expose the application through a tunnel (ngrok, cloudflared…) and set its public URL as `default_uri`.
+
 #### Securing the Webhook
 
 With a `token` set, the callback URL carries it as `?token=`, and the endpoint answers `401` to a callback without it,
@@ -566,23 +591,64 @@ Every request names the bundle and its version, PHP, Symfony and the platform, a
 Calisero can tell the bundle's requests apart and see which versions sent them:
 
 ```
-User-Agent: Calisero-SMS-Symfony/1.0.1 (PHP 8.4.13; Symfony 7.4.0; linux x86_64)
+User-Agent: Calisero-SMS-Symfony/1.0.3 (PHP 8.4.13; Symfony 7.4.0; linux x86_64)
 ```
 
 The header cannot be configured: a request whose `User-Agent` starts with `Calisero-SMS-Symfony/` always comes from
 this bundle.
 
+## TLS
+
+The API accepts HTTPS connections with TLS 1.2 or TLS 1.3 only: since 1 November 2026, a client that offers only TLS
+1.0 or 1.1 is refused during the handshake, with no HTTP answer, and nothing is sent or billed. The SDK's cURL client
+(`calisero/calisero-php` 2.3.3 or later, which the bundle requires) never offers less than TLS 1.2. PHP's cURL must be
+built with an SSL library that supports it, as any OpenSSL from 1.0.1 on does; one that cannot use it fails with a
+`TransportException` before anything is sent, instead of offering an older version the API refuses.
+`php -r 'print_r(curl_version());'` shows the SSL library in use.
+
+Keep `base_uri` on `https://`: the API redirects `http://`, the SDK follows no redirect, and most clients would turn the
+redirected `POST` into a `GET` without its body. The bundle refuses an `http://` base URI in its configuration.
+
 ## Sender ID (Alphanumeric) Requirements
 
-Custom alphanumeric sender IDs (the `from` parameter) must be **approved by Calisero** before they can be used in
-production. With an unapproved sender the API may refuse the message (422), or the gateway substitute a default one.
+Custom alphanumeric sender IDs (the `from` parameter, or the `?from=` of the Notifier DSN) must be **approved for your
+account** (Calisero dashboard → Messages → Senders) and written exactly as approved: the match is case-sensitive. A
+sender that is unknown, still pending, rejected or another account's is refused with a `ValidationException` (422,
+"The sender is invalid or is not approved." on the `sender` field): nothing is sent and nothing is billed. Through the
+Notifier, it arrives as a `CaliseroTransportException` whose `getApiException()` is that `ValidationException`.
 
 - Length: 3–11 characters; letters, digits, spaces, hyphens (`-`) and dots (`.`), as the `SenderId` constraint checks.
 - No fully numeric sender IDs unless explicitly provisioned; avoid trademarks you do not own.
-- To request one: Calisero dashboard → Sender IDs, with a short business justification.
 - In multi-tenant applications, map tenants to approved senders: never take a sender from user input.
+- `MyBrand` and `CALISERO` in this documentation are placeholders, not senders you can use.
 
-Without an approved sender, leave `from` out and Calisero assigns its default one.
+Until your sender is approved, leave `from` out: the message goes out under the default sender. Verification codes
+always go out from a shared sender and need no sender of your own.
+
+## Approved Link Domains
+
+An account can be restricted to its **approved link domains** (Calisero dashboard → Messages → Link domains). Every
+link in the text of its messages, with or without `https://` (`www.example.ro`, `example.ro/path`), must then go to an
+approved domain, exactly, or to one of its subdomains when they were approved too. Links Calisero shortens are checked
+by the address they open.
+
+A link to any other domain is refused with a `ValidationException` (422) on the `body` field, whose message names the
+domain: nothing is created and nothing is billed, with a sandbox API key too. Through the Notifier, it arrives as a
+`CaliseroTransportException` whose `getApiException()` is that `ValidationException`; `calisero:sms:test` lists it with
+the other fields at fault.
+
+```php
+use Calisero\Sms\Exceptions\ValidationException;
+
+try {
+    $this->sms->sendSms(['to' => '+40712345678', 'text' => 'Track it: https://shop.example.com/orders/123']);
+} catch (ValidationException $e) {
+    $e->getValidationErrors()['body'] ?? null; // ["Links to shop.example.com are not allowed for this account: …"]
+}
+```
+
+A scheduled message whose domain is rejected or revoked before it is due fails, with the error code 1005. An account
+without the restriction is not affected. Ask for a domain in the dashboard before you send links to it.
 
 ## Credit Monitoring
 
@@ -617,7 +683,8 @@ The webhook must be enabled.
 
 ## Daily Sending Limit
 
-Every Calisero account has its own daily sending limit. Each real message counts once, whatever its number of parts,
+Every Calisero account has its own daily sending limit: a new account starts with 50 messages a day, until Calisero
+raises it on request. Each real message counts once, whatever its number of parts,
 verification codes included; test messages (a sandbox account or API key) never count. The day ends at midnight,
 Romania time (`Europe/Bucharest`).
 
