@@ -180,6 +180,10 @@ the trace ID with every failure and every send. Every answer carries it as `X-Tr
 - **Sender ID**: alphanumeric, at most 11 characters, approved for the account and written exactly as approved;
   otherwise 422 and nothing is sent. Leave `from` out for the default sender. It cannot receive replies. Never take it
   from user input. OTP codes go out from the shared "Verify" sender and need no sender of your own.
+- **Approved link domains**: on an account restricted to them (dashboard: Messages › Link domains), every link in the
+  text, with or without `https://`, must go to an approved domain (or an approved subdomain); any other is refused with
+  a 422 `ValidationException` whose `getValidationErrors()['body']` names the domain, sandbox key included, and nothing
+  is sent. A scheduled message whose domain is rejected or revoked before it is due fails with the error code 1005.
 - **Scheduling**: the API reads `schedule_at` as `Y-m-d H:i:s`, Romania time (Europe/Bucharest). Pass a
   `\DateTimeInterface` and the bundle converts it; a string is sent as is and must already be in that format and time
   zone.
@@ -190,7 +194,8 @@ the trace ID with every failure and every send. Every answer carries it as `X-Tr
   private address, the API refuses the message; leave the webhook disabled in local development or use a tunnel.
 - **429 has two meanings**: the request rate limit (240 requests a minute; retry after `getRetryAfter()`) and the
   daily sending limit (`DailyLimitExceededException`: nothing sent, retrying the same day will not help; it resets at
-  midnight, Romania time, `getResetsAt()`). `getResponseMeta()->getDailyRemaining()` reports what is left today.
+  midnight, Romania time, `getResetsAt()`). `getResponseMeta()->getDailyRemaining()` reports what is left today. A new
+  account starts with 50 messages a day, until Calisero raises it on request.
 - **No idempotency key**: the bundle never retries, and you should not retry a send blindly after a timeout or a
   `TransportException`: the SMS may have been sent and billed. Check `listMessages()` first. Route the Notifier's
   `SmsMessage` through a Messenger transport with `retry_strategy: { max_retries: 0 }`.
@@ -200,7 +205,7 @@ the trace ID with every failure and every send. Every answer carries it as `X-Tr
 - **Sandbox and shortened links**: test messages (a sandbox account or API key) keep their links as written and come
   back with an empty `getShortenedUrls()`: never assert on shortened links against the sandbox.
 - **TLS and HTTPS**: the API takes TLS 1.2 or 1.3 only; the SDK's cURL client never offers less (PHP's cURL needs an
-  SSL library with TLS 1.2, e.g. OpenSSL 1.0.1+). Keep `base_uri` on `https://`: `http://` is redirected, the SDK
+  SSL library with TLS 1.2, e.g. OpenSSL 1.0.1+; without one, a `TransportException` comes before anything is sent). Keep `base_uri` on `https://`: `http://` is redirected, the SDK
   follows no redirect, and the bundle refuses an `http://` base URI in its configuration.
 
 ## Working on this library

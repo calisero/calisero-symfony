@@ -36,7 +36,7 @@ commands and validation constraints. Supports **Symfony 6.4, 7.x and 8.x** on **
 
 | Bundle | Symfony | PHP | Calisero PHP SDK | Calisero API |
 | --- | --- | --- | --- | --- |
-| `^1.0.3` | 6.4, 7.x, 8.x | 8.2 – 8.5 (Symfony 8 requires PHP 8.4+) | `^2.3.2` | 1.0.17 |
+| `^1.0.3` | 6.4, 7.x, 8.x | 8.2 – 8.5 (Symfony 8 requires PHP 8.4+) | `^2.3.3` | 1.0.17 |
 | `1.0.0` – `1.0.2` | 6.4, 7.x, 8.x | 8.2 – 8.5 (Symfony 8 requires PHP 8.4+) | `^2.3` | 1.0.14 – 1.0.15 |
 
 Composer picks the Symfony release your PHP version allows: on PHP 8.2 and 8.3 you get Symfony 6.4 or 7.x, on PHP 8.4
@@ -165,6 +165,8 @@ foreach ($this->sms->getMessageStatus($messageId)->getData()->getShortenedUrls()
 
 - **Shortened links in the sandbox**: test messages (a sandbox account or a sandbox API key) keep their links as
   written and come back with no shortened URL: do not assert on shortened links against the sandbox.
+- **Links in `text`**: on an account restricted to its approved link domains, every link must go to one of them; any
+  other is refused with a `ValidationException` (422) on `body`. See [Approved Link Domains](#approved-link-domains).
 - **`from`**: a sender approved for your account, written exactly as approved (the match is case-sensitive). One that
   is unknown, still pending, rejected or another account's is refused with a `ValidationException` (422, "The sender
   is invalid or is not approved." on `sender`): nothing is sent or billed. Leave `from` out for the default sender. See
@@ -599,9 +601,10 @@ this bundle.
 
 The API accepts HTTPS connections with TLS 1.2 or TLS 1.3 only: since 1 November 2026, a client that offers only TLS
 1.0 or 1.1 is refused during the handshake, with no HTTP answer, and nothing is sent or billed. The SDK's cURL client
-(`calisero/calisero-php` 2.3.2 or later, which the bundle requires) never offers less than TLS 1.2. PHP's cURL must be
+(`calisero/calisero-php` 2.3.3 or later, which the bundle requires) never offers less than TLS 1.2. PHP's cURL must be
 built with an SSL library that supports it, as any OpenSSL from 1.0.1 on does; one that cannot use it fails with a
-`TransportException` before anything is sent. `php -r 'print_r(curl_version());'` shows the SSL library in use.
+`TransportException` before anything is sent, instead of offering an older version the API refuses.
+`php -r 'print_r(curl_version());'` shows the SSL library in use.
 
 Keep `base_uri` on `https://`: the API redirects `http://`, the SDK follows no redirect, and most clients would turn the
 redirected `POST` into a `GET` without its body. The bundle refuses an `http://` base URI in its configuration.
@@ -621,6 +624,31 @@ Notifier, it arrives as a `CaliseroTransportException` whose `getApiException()`
 
 Until your sender is approved, leave `from` out: the message goes out under the default sender. Verification codes
 always go out from a shared sender and need no sender of your own.
+
+## Approved Link Domains
+
+An account can be restricted to its **approved link domains** (Calisero dashboard → Messages → Link domains). Every
+link in the text of its messages, with or without `https://` (`www.example.ro`, `example.ro/path`), must then go to an
+approved domain, exactly, or to one of its subdomains when they were approved too. Links Calisero shortens are checked
+by the address they open.
+
+A link to any other domain is refused with a `ValidationException` (422) on the `body` field, whose message names the
+domain: nothing is created and nothing is billed, with a sandbox API key too. Through the Notifier, it arrives as a
+`CaliseroTransportException` whose `getApiException()` is that `ValidationException`; `calisero:sms:test` lists it with
+the other fields at fault.
+
+```php
+use Calisero\Sms\Exceptions\ValidationException;
+
+try {
+    $this->sms->sendSms(['to' => '+40712345678', 'text' => 'Track it: https://shop.example.com/orders/123']);
+} catch (ValidationException $e) {
+    $e->getValidationErrors()['body'] ?? null; // ["Links to shop.example.com are not allowed for this account: …"]
+}
+```
+
+A scheduled message whose domain is rejected or revoked before it is due fails, with the error code 1005. An account
+without the restriction is not affected. Ask for a domain in the dashboard before you send links to it.
 
 ## Credit Monitoring
 
@@ -655,7 +683,8 @@ The webhook must be enabled.
 
 ## Daily Sending Limit
 
-Every Calisero account has its own daily sending limit. Each real message counts once, whatever its number of parts,
+Every Calisero account has its own daily sending limit: a new account starts with 50 messages a day, until Calisero
+raises it on request. Each real message counts once, whatever its number of parts,
 verification codes included; test messages (a sandbox account or API key) never count. The day ends at midnight,
 Romania time (`Europe/Bucharest`).
 

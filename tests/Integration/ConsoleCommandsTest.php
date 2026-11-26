@@ -104,6 +104,22 @@ final class ConsoleCommandsTest extends IntegrationTestCase
         $this->assertMatchesRegularExpression('/recipient\s+The recipient format is invalid\./', $tester->getDisplay());
     }
 
+    /**
+     * An account restricted to its approved link domains may link only to them.
+     */
+    public function testSmsTestListsALinkDomainThatIsNotApproved(): void
+    {
+        $message = 'Links to shop.example.test are not allowed for this account: it is not one of its approved link domains.';
+        $this->transport()->respond(422, ApiFixtures::validationError('body', $message));
+
+        $tester = $this->command('calisero:sms:test');
+        $tester->execute(['to' => TestPhones::DEFAULT, '--text' => 'Track it: https://shop.example.test/o/1']);
+
+        $this->assertSame(Command::FAILURE, $tester->getStatusCode());
+        $this->assertStringContainsString('API validation error: Links to shop.example.test are not allowed', $tester->getDisplay());
+        $this->assertMatchesRegularExpression('/body\s+Links to shop\.example\.test are not allowed/', $tester->getDisplay());
+    }
+
     public function testSmsTestReportsAnOptionOfTheWrongTypeBeforeAnyRequest(): void
     {
         $tester = $this->command('calisero:sms:test');

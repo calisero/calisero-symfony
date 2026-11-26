@@ -27,7 +27,9 @@ interface SmsClientInterface
      *
      * Parameters (the optional ones also in camelCase: visibleBody, scheduleAt...):
      *  - to (string, required): the recipient, in E.164 format
-     *  - text (string, required): the message body
+     *  - text (string, required): the message body. On an account restricted to its approved
+     *    link domains, every link in it must go to one of them; any other is refused with a
+     *    422 on `body` and nothing is sent
      *  - from (string): a sender ID approved for the account, written exactly as approved
      *    (case-sensitive); any other is refused with a 422 on `sender` and nothing is sent.
      *    Leave it out for the default sender

@@ -144,25 +144,48 @@ final class OpenApiContractTest extends IntegrationTestCase
 
     /**
      * A sender that is not approved for the account (unknown, pending, rejected or another
-     * account's) is refused: nothing is sent.
+     * account's) is refused on `sender`; on an account restricted to its approved link
+     * domains, a link to any other domain is refused on `body`. Nothing is sent either way.
      */
-    public function testTheDocumentedRefusalOfASenderIsReported(): void
+    public function testEveryDocumentedRefusalOfAMessageIsReportedOnItsField(): void
     {
-        $example = self::senderRefusal();
-        $this->transport()->respond(422, $example);
+        $examples = self::messageRefusals();
+        $this->assertSame(['sender_not_approved' => 'sender', 'link_domain_not_approved' => 'body'], array_map(
+            static fn (mixed $example): string => (string) array_key_first(self::array(self::path(self::array($example), 'value', 'errors'))),
+            $examples,
+        ));
+
+        foreach ($examples as $name => $example) {
+            $body = self::array(self::path(self::array($example), 'value'));
+            $field = (string) array_key_first(self::array(self::path($body, 'errors')));
+            $this->transport()->respond(422, $body);
+
+            try {
+                $this->client()->sendSms(['to' => TestPhones::DEFAULT, 'text' => 'Track it: https://oix.ro-inx.live/o/1', 'from' => 'NotApproved']);
+                $this->fail(\sprintf('The documented refusal "%s" was not reported.', $name));
+            } catch (ValidationException $e) {
+                $this->assertSame($body['message'], $e->getMessage(), (string) $name);
+                $this->assertSame(self::path($body, 'errors', $field), $e->getValidationErrors()[$field] ?? null, (string) $name);
+            }
+        }
+    }
+
+    public function testTheDocumentedRefusalOfALinkDomainReachesTheNotifier(): void
+    {
+        $this->transport()->respond(422, self::messageRefusal('link_domain_not_approved'));
 
         try {
-            $this->client()->sendSms(['to' => TestPhones::DEFAULT, 'text' => 'Hello', 'from' => 'NotApproved']);
+            $this->service('test.texter', TexterInterface::class)->send(new SmsMessage(TestPhones::DEFAULT, 'Track it: https://oix.ro-inx.live/o/1'));
             $this->fail('The documented refusal was not reported.');
-        } catch (ValidationException $e) {
-            $this->assertSame($example['message'], $e->getMessage());
-            $this->assertSame(self::path($example, 'errors', 'sender'), $e->getValidationErrors()['sender'] ?? null);
+        } catch (CaliseroTransportException $e) {
+            $this->assertInstanceOf(ValidationException::class, $e->getApiException());
+            $this->assertStringContainsString('oix.ro-inx.live', (string) json_encode($e->getApiException()->getValidationErrors()['body'] ?? null));
         }
     }
 
     public function testTheDocumentedRefusalOfASenderReachesTheNotifier(): void
     {
-        $this->transport()->respond(422, self::senderRefusal());
+        $this->transport()->respond(422, self::messageRefusal('sender_not_approved'));
 
         try {
             $this->service('test.texter', TexterInterface::class)->send(new SmsMessage(TestPhones::DEFAULT, 'Hello', 'NotApproved'));
@@ -215,11 +238,21 @@ final class OpenApiContractTest extends IntegrationTestCase
     }
 
     /**
+     * The documented 422s of POST /messages, by name.
+     *
      * @return array<array-key, mixed>
      */
-    private static function senderRefusal(): array
+    private static function messageRefusals(): array
     {
-        return self::array(self::path(self::document(), 'components', 'responses', '422CreateMessageValidationError', 'content', 'application/json', 'example'));
+        return self::array(self::path(self::document(), 'components', 'responses', '422CreateMessageValidationError', 'content', 'application/json', 'examples'));
+    }
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    private static function messageRefusal(string $name): array
+    {
+        return self::array(self::path(self::messageRefusals(), $name, 'value'));
     }
 
     /**
